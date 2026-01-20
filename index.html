@@ -1,0 +1,484 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor AI - Your Health Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-x: hidden;
+            position: relative;
+            color: #333;
+        }
+
+        .floating-icons {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .floating-icons i {
+            position: absolute; font-size: 1.8rem; color: rgba(255,255,255,0.1);
+            animation: float 15s infinite linear;
+        }
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.7; } 90% { opacity: 0.7; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+            border-radius: 24px; box-shadow: 0 25px 80px rgba(0,0,0,0.25);
+            max-width: 820px; width: 95%; margin: 20px auto; overflow: hidden;
+            z-index: 1; border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 35px 25px; text-align: center;
+        }
+        .header h1 { font-size: 2.8em; margin-bottom: 8px; font-weight: 700; }
+        .header p { font-size: 1.2em; opacity: 0.95; }
+
+        .disclaimer {
+            background: linear-gradient(90deg, #fff3cd, #ffeaa7);
+            border-left: 5px solid #f39c12; padding: 16px; margin: 20px;
+            border-radius: 10px; font-size: 0.92em; color: #856404;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px;
+        }
+        .disclaimer i { font-size: 1.3em; color: #f39c12; }
+
+        .quick-buttons {
+            padding: 20px; display: flex; flex-wrap: wrap; gap: 12px;
+            justify-content: center; background: #f8f9fa; border-bottom: 1px solid #eee;
+        }
+        .quick-btn {
+            padding: 12px 20px; background: white; border: 2px solid #e0e0e0;
+            border-radius: 30px; cursor: pointer; transition: all 0.3s ease;
+            font-size: 0.95em; font-weight: 500; display: flex; align-items: center;
+            gap: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+        .quick-btn:hover {
+            background: #667eea; color: white; border-color: #667eea;
+            transform: translateY(-3px); box-shadow: 0 8px 20px rgba(102,126,234,0.3);
+        }
+        .quick-btn i { font-size: 1.1em; }
+
+        .chat-container {
+            height: 520px; overflow-y: auto; padding: 25px; background: #f8f9fa;
+        }
+        .message {
+            margin-bottom: 18px; display: flex; animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.user { justify-content: flex-end; }
+        .message-content {
+            max-width: 72%; padding: 16px 20px; border-radius: 18px;
+            line-height: 1.7; font-size: 1em;
+        }
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; border-bottom-right-radius: 6px;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.3);
+        }
+        .message.bot .message-content {
+            background: white; color: #2c3e50; border-bottom-left-radius: 6px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.12); border: 1px solid #eee;
+        }
+
+        .medicine-list { margin-top: 12px; padding-left: 5px; }
+        .medicine-item {
+            margin: 10px 0; font-weight: 500; display: flex; align-items: center; gap: 8px;
+        }
+        .brand-type {
+            padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600;
+        }
+        .indian { background: #d4edda; color: #155724; }
+        .foreign { background: #d1ecf1; color: #0c5460; }
+
+        .input-container {
+            display: flex; padding: 22px; background: white;
+            border-top: 1px solid #eee; gap: 12px;
+        }
+        #userInput {
+            flex: 1; padding: 16px 20px; border: 2px solid #ddd;
+            border-radius: 30px; font-size: 1.02em; outline: none;
+            background: #f9f9f9; transition: all 0.3s ease;
+        }
+        #userInput:focus {
+            border-color: #667eea; background: white;
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.15);
+        }
+        #sendBtn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; border: none; width: 56px; height: 56px;
+            border-radius: 50%; cursor: pointer; font-size: 1.3em;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4); transition: all 0.3s ease;
+        }
+        #sendBtn:hover {
+            transform: translateY(-3px) scale(1.08);
+            box-shadow: 0 10px 25px rgba(102,126,234,0.5);
+        }
+
+        .footer {
+            text-align: center; padding: 25px; background: rgba(0,0,0,0.05);
+            color: #555; font-size: 0.95em; z-index: 1;
+        }
+        .footer .brand { font-weight: 700; color: #2c3e50; font-size: 1.3em; margin-bottom: 8px; }
+        .footer .founder { font-size: 0.9em; color: #7f8c8d; margin-bottom: 12px; }
+        .gmail-btn {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: #ea4335; color: white; padding: 12px 24px;
+            border-radius: 30px; text-decoration: none; font-weight: 600;
+            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(234,67,53,0.3);
+        }
+        .gmail-btn:hover { background: #d93025; transform: translateY(-2px); }
+        .gmail-btn i { font-size: 1.3em; }
+
+        @media (max-width: 600px) {
+            .container { width: 98%; }
+            .header h1 { font-size: 2.2em; }
+            .quick-btn { padding: 10px 16px; font-size: 0.9em; }
+            #sendBtn { width: 50px; height: 50px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="floating-icons" id="floatingIcons"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Doctor bot</h1>
+            <p>for pharma  </p>
+        </div>
+
+        <div class="disclaimer">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div><strong>ab:</strong>hishek.</div>
+        </div>
+
+        <div class="quick-buttons">
+            <button class="quick-btn" onclick="quickQuery('headache')"><i class="fas fa-head-side-cough"></i> Headache</button>
+            <button class="quick-btn" onclick="quickQuery('fever')"><i class="fas fa-thermometer-half"></i> Fever</button>
+            <button class="quick-btn" onclick="quickQuery('cold and cough')"><i class="fas fa-virus"></i> Cold & Cough</button>
+            <button class="quick-btn" onclick="quickQuery('stomach pain')"><i class="fas fa-stomach"></i> Stomach Pain</button>
+            <button class="quick-btn" onclick="quickQuery('diabetes')"><i class="fas fa-tint"></i> Diabetes</button>
+            <button class="quick-btn" onclick="quickQuery('joint pain')"><i class="fas fa-bone"></i> Joint Pain</button>
+            <button class="quick-btn" onclick="quickQuery('allergy')"><i class="fas fa-allergies"></i> Allergy</button>
+            <button class="quick-btn" onclick="quickQuery('uti')"><i class="fas fa-toilet"></i> UTI</button>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message bot">
+                <div class="message-content">
+                    <strong>Hello! I'm Doctor AI</strong><br><br>
+                    I can help with 25+ common health issues. Describe your symptoms or use quick buttons!
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="e.g. I have fever and cough..." onkeypress="handleKeyPress(event)">
+            <button id="sendBtn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="brand">Doctor AI</div>
+        <div class="founder">Founder: <strong>Abhishek</strong></div>
+        <a href="mailto:alphaabhishek7201@gmail.com" class="gmail-btn">
+            <i class="fas fa-envelope"></i> Contact via Gmail
+        </a>
+    </div>
+
+    <script>
+        // Floating Icons
+        const icons = ['Pill', 'Syringe', 'Stethoscope', 'Heart', 'Lungs', 'Brain', 'Virus', 'Droplet', 'Tooth', 'Eye', 'Ear', 'Bone', 'Bandage'];
+        const floatingContainer = document.getElementById('floatingIcons');
+        function createFloatingIcon() {
+            const icon = document.createElement('i');
+            const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+            icon.innerHTML = randomIcon;
+            icon.style.left = Math.random() * 100 + 'vw';
+            icon.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            icon.style.fontSize = (Math.random() * 1.5 + 1.5) + 'rem';
+            floatingContainer.appendChild(icon);
+            setTimeout(() => icon.remove(), 20000);
+        }
+        setInterval(createFloatingIcon, 1800);
+
+        // === FULL MEDICAL DATABASE (25+ CONDITIONS) ===
+        const medicalDatabase = {
+            headache: {
+                condition: "Headache / Migraine",
+                advice: "Rest in a dark, quiet room. Stay hydrated. Avoid screens. Apply cold compress.",
+                medicines: [
+                    { name: "Paracetamol (Crocin, Dolo 650)", type: "indian" },
+                    { name: "Ibuprofen (Brufen, Combiflam)", type: "indian" },
+                    { name: "Aspirin (Disprin, Ecosprin)", type: "indian" },
+                    { name: "Sumatriptan (Suminat)", type: "indian" },
+                    { name: "Tylenol", type: "foreign" },
+                    { name: "Advil", type: "foreign" },
+                    { name: "Imitrex", type: "foreign" }
+                ]
+            },
+            fever: {
+                condition: "Fever / Pyrexia",
+                advice: "Rest, drink fluids (ORS, coconut water). Sponge bath if high fever. Monitor temperature.",
+                medicines: [
+                    { name: "Paracetamol (Calpol, Dolo 650)", type: "indian" },
+                    { name: "Ibuprofen (Brufen 400)", type: "indian" },
+                    { name: "Mefenamic Acid (Meftal-P)", type: "indian" },
+                    { name: "Nimesulide (Nise)", type: "indian" },
+                    { name: "Tylenol", type: "foreign" },
+                    { name: "Motrin", type: "foreign" }
+                ]
+            },
+            "cold": {
+                condition: "Cold & Cough",
+                advice: "Steam inhalation, warm fluids, honey + ginger. Avoid cold drinks & AC.",
+                medicines: [
+                    { name: "Cetirizine (Okacet, Cetzine)", type: "indian" },
+                    { name: "Levocetirizine (Levocet)", type: "indian" },
+                    { name: "Dextromethorphan (Benadryl DR)", type: "indian" },
+                    { name: "Ambroxol (Mucinac, Ascoril)", type: "indian" },
+                    { name: "Guaifenesin (Mucolite)", type: "indian" },
+                    { name: "Robitussin", type: "foreign" },
+                    { name: "Mucinex", type: "foreign" }
+                ]
+            },
+            "stomach pain": {
+                condition: "Stomach Pain / Acidity / Gas",
+                advice: "Avoid spicy/oily food. Eat small meals. Don't lie down after eating. Try ajwain water.",
+                medicines: [
+                    { name: "Pantoprazole (Pan 40, Pantocid)", type: "indian" },
+                    { name: "Omeprazole (Omez 20)", type: "indian" },
+                    { name: "Rabeprazole (Razo 20)", type: "indian" },
+                    { name: "Domperidone (Domstal)", type: "indian" },
+                    { name: "Digene Gel", type: "indian" },
+                    { name: "Eno", type: "indian" },
+                    { name: "Prilosec", type: "foreign" },
+                    { name: "Zantac", type: "foreign" }
+                ]
+            },
+            diarrhea: {
+                condition: "Diarrhea / Loose Motion",
+                advice: "ORS every hour. Eat rice, banana, curd. Avoid dairy & oily food.",
+                medicines: [
+                    { name: "Loperamide (Eldoper, Imodium)", type: "indian" },
+                    { name: "Racecadotril (Redotil)", type: "indian" },
+                    { name: "ORS (Electral, Enerzal)", type: "indian" },
+                    { name: "Probiotics (Darolac, Enterogermina)", type: "indian" },
+                    { name: "Imodium", type: "foreign" },
+                    { name: "Pepto-Bismol", type: "foreign" }
+                ]
+            },
+            constipation: {
+                condition: "Constipation",
+                advice: "Drink warm water + lemon. Eat papaya, prunes, fiber-rich food. Walk daily.",
+                medicines: [
+                    { name: "Isabgol (Sat Isabgol)", type: "indian" },
+                    { name: "Cremaffin Plus", type: "indian" },
+                    { name: "Dulcolax (Bisacodyl)", type: "indian" },
+                    { name: "Lactulose (Duphalac)", type: "indian" },
+                    { name: "Metamucil", type: "foreign" },
+                    { name: "MiraLAX", type: "foreign" }
+                ]
+            },
+            diabetes: {
+                condition: "Diabetes Management",
+                advice: "Check sugar daily. Eat low-carb, high-fiber. Walk 30 min. Take meds on time.",
+                medicines: [
+                    { name: "Metformin (Glycomet, Gluconorm)", type: "indian" },
+                    { name: "Glimepiride (Amaryl)", type: "indian" },
+                    { name: "Sitagliptin (Januvia)", type: "indian" },
+                    { name: "Vildagliptin (Galvus)", type: "indian" },
+                    { name: "Insulin (Mixtard, Lantus)", type: "indian" },
+                    { name: "Glucophage", type: "foreign" },
+                    { name: "Jardiance", type: "foreign" }
+                ]
+            },
+            hypertension: {
+                condition: "High Blood Pressure",
+                advice: "Low salt, exercise, stress management. Monitor BP daily.",
+                medicines: [
+                    { name: "Amlodipine (Amlong, Stamlo)", type: "indian" },
+                    { name: "Telmisartan (Telma 40)", type: "indian" },
+                    { name: "Losartan (Losakind)", type: "indian" },
+                    { name: "Atenolol (Aten 50)", type: "indian" },
+                    { name: "Norvasc", type: "foreign" },
+                    { name: "Cozaar", type: "foreign" }
+                ]
+            },
+            allergy: {
+                condition: "Allergies / Itching",
+                advice: "Avoid dust, pollen. Use mask. Keep windows closed.",
+                medicines: [
+                    { name: "Cetirizine (Okacet, Alerid)", type: "indian" },
+                    { name: "Levocetirizine (Levocet)", type: "indian" },
+                    { name: "Montelukast (Montek LC)", type: "indian" },
+                    { name: "Fexofenadine (Allegra)", type: "indian" },
+                    { name: "Claritin", type: "foreign" },
+                    { name: "Zyrtec", type: "foreign" }
+                ]
+            },
+            asthma: {
+                condition: "Asthma / Breathing Issues",
+                advice: "Avoid smoke, dust. Use inhaler as prescribed. Practice breathing exercises.",
+                medicines: [
+                    { name: "Salbutamol (Asthalin Inhaler)", type: "indian" },
+                    { name: "Budesonide (Budecort)", type: "indian" },
+                    { name: "Formoterol (Foracort)", type: "indian" },
+                    { name: "Ventolin", type: "foreign" },
+                    { name: "Symbicort", type: "foreign" }
+                ]
+            },
+            "joint pain": {
+                condition: "Joint Pain / Arthritis",
+                advice: "Hot/cold pack. Light exercise. Maintain weight. Eat anti-inflammatory foods.",
+                medicines: [
+                    { name: "Diclofenac (Voveran, Reactin)", type: "indian" },
+                    { name: "Aceclofenac (Hifenac)", type: "indian" },
+                    { name: "Etoricoxib (Etody 90)", type: "indian" },
+                    { name: "Glucosamine (Cartigen)", type: "indian" },
+                    { name: "Celebrex", type: "foreign" },
+                    { name: "Voltaren", type: "foreign" }
+                ]
+            },
+            "uti": {
+                condition: "Urinary Tract Infection (UTI)",
+                advice: "Drink 3L water. Urinate frequently. Cranberry juice. Maintain hygiene.",
+                medicines: [
+                    { name: "Nitrofurantoin (Martifur)", type: "indian" },
+                    { name: "Norfloxacin (Norflox)", type: "indian" },
+                    { name: "Ciprofloxacin (Ciplox)", type: "indian" },
+                    { name: "Cranberry Extract (Cranpac)", type: "indian" },
+                    { name: "Cipro", type: "foreign" },
+                    { name: "Macrobid", type: "foreign" }
+                ]
+            },
+            "skin rash": {
+                condition: "Skin Rash / Infection",
+                advice: "Keep dry. Avoid scratching. Use mild soap. Don't share towels.",
+                medicines: [
+                    { name: "Betamethasone (Betnovate)", type: "indian" },
+                    { name: "Clotrimazole (Candid)", type: "indian" },
+                    { name: "Mupirocin (T-Bact)", type: "indian" },
+                    { name: "Hydrocortisone", type: "indian" },
+                    { name: "Neosporin", type: "foreign" },
+                    { name: "Lotrimin", type: "foreign" }
+                ]
+            },
+            thyroid: {
+                condition: "Thyroid Issues",
+                advice: "Take medicine on empty stomach. Regular TSH test. Avoid soy & cabbage.",
+                medicines: [
+                    { name: "Levothyroxine (Thyronorm, Eltroxin)", type: "indian" },
+                    { name: "Carbimazole (Neo-Mercazole)", type: "indian" },
+                    { name: "Synthroid", type: "foreign" },
+                    { name: "Levoxyl", type: "foreign" }
+                ]
+            },
+            "vitamin deficiency": {
+                condition: "Vitamin D / B12 Deficiency",
+                advice: "Morning sunlight. Eat eggs, fish, dairy. Include nuts & greens.",
+                medicines: [
+                    { name: "Vitamin D3 (Calcirol, D-Rise)", type: "indian" },
+                    { name: "Vitamin B12 (Neurobion)", type: "indian" },
+                    { name: "Multivitamin (Supradyn, Revital)", type: "indian" },
+                    { name: "Centrum", type: "foreign" },
+                    { name: "Nature Made", type: "foreign" }
+                ]
+            }
+        };
+
+        // === KEYWORD MATCHING (SMART) ===
+        function findBestMatch(input) {
+            input = input.toLowerCase().trim();
+            const keywords = {
+                headache: ['headache', 'head pain', 'migraine', 'head ache'],
+                fever: ['fever', 'temperature', 'high temp', 'pyrexia', 'hot'],
+                cold: ['cold', 'cough', 'sneeze', 'runny nose', 'congestion', 'throat'],
+                'stomach pain': ['stomach', 'pain', 'acidity', 'gas', 'bloating', 'heartburn'],
+                diarrhea: ['diarrhea', 'loose motion', 'dysentery', 'watery stool'],
+                constipation: ['constipation', 'hard stool', 'no motion'],
+                diabetes: ['diabetes', 'sugar', 'glucose', 'high sugar'],
+                hypertension: ['bp', 'blood pressure', 'hypertension', 'high bp'],
+                allergy: ['allergy', 'itching', 'rash', 'hives', 'sneezing'],
+                asthma: ['asthma', 'breathing', 'wheeze', 'short breath'],
+                'joint pain': ['joint', 'knee pain', 'back pain', 'arthritis'],
+                uti: ['uti', 'urine', 'burning', 'frequent urination'],
+                'skin rash': ['skin', 'rash', 'infection', 'fungal', 'itchy'],
+                thyroid: ['thyroid', 'hypothyroid', 'hyperthyroid', 'tsh'],
+                'vitamin deficiency': ['vitamin', 'weakness', 'tired', 'dizzy', 'b12', 'vitamin d']
+            };
+
+            for (let condition in keywords) {
+                if (keywords[condition].some(k => input.includes(k))) {
+                    return condition;
+                }
+            }
+            return null;
+        }
+
+        // === CHAT FUNCTIONS ===
+        function addMessage(text, isUser) {
+            const chat = document.getElementById('chatContainer');
+            const msg = document.createElement('div');
+            msg.className = `message ${isUser ? 'user' : 'bot'}`;
+            msg.innerHTML = `<div class="message-content">${text}</div>`;
+            chat.appendChild(msg);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function generateResponse(input) {
+            const match = findBestMatch(input);
+            if (match && medicalDatabase[match]) {
+                const d = medicalDatabase[match];
+                let res = `<strong>${d.condition}</strong><br><br>`;
+                res += `<strong>Advice:</strong> ${d.advice}<br><br>`;
+                res += `<strong>Medicines:</strong><div class="medicine-list">`;
+                d.medicines.forEach(m => {
+                    res += `<div class="medicine-item">• ${m.name} <span class="brand-type ${m.type}">${m.type === 'indian' ? 'Indian' : 'International'}</span></div>`;
+                });
+                res += `</div><br><em>Always consult a doctor before use.</em>`;
+                return res;
+            } else {
+                return `I don't have info for "<strong>${input}</strong>". Try: headache, fever, cold, diabetes, etc.`;
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+            addMessage(text, true);
+            input.value = '';
+            setTimeout(() => addMessage(generateResponse(text), false), 600);
+        }
+
+        function quickQuery(q) {
+            document.getElementById('userInput').value = q;
+            sendMessage();
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        setTimeout(() => setInterval(createFloatingIcon, 1800), 1000);
+    </script>
+</body>
+</html>
